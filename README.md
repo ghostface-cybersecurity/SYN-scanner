@@ -1,5 +1,5 @@
 <h2 align="center">SYN-scanner</h2>
-
+<p align="center">SYN-scan tool in python</p>
 
 <h4 align="center">launch</h4>
 
