@@ -2,3 +2,7 @@
 
 
 <h4 align="center">launch</h4>
+
+```
+sudo python3 SYN-scanner.py <ip_addr> <port>
+```
