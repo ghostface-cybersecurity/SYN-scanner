@@ -1,33 +1,34 @@
-  #####   ##  ##   ##   ##            #####     ####     ##     ##   ##  ##   ##  #######  ######
- ##   ##  ##  ##   ###  ##           ##   ##   ##  ##   ####    ###  ##  ###  ##   ##   #   ##  ##
- #        ##  ##   #### ##           #        ##       ##  ##   #### ##  #### ##   ## #     ##  ##
-  #####    ####    ## ####  ######    #####   ##       ##  ##   ## ####  ## ####   ####     #####
-      ##    ##     ##  ###                ##  ##       ######   ##  ###  ##  ###   ## #     ## ##
- ##   ##    ##     ##   ##           ##   ##   ##  ##  ##  ##   ##   ##  ##   ##   ##   #   ##  ##
-  #####    ####    ##   ##            #####     ####   ##  ##   ##   ##  ##   ##  #######  #### ##
+from scapy.all import IP, TCP, sr1, ICMP 
+import sys
 
-__________________________________________________________________________________________________
-                                             ABOUT
-__________________________________________________________________________________________________
-Description: SYN-scan tool in python
-Program: SYN-scanner
-Language: Python 3.12.7
-Tested on: Linux 6.11.2
-Author: ghostface-cybersecurity
+def icmp_probe(ip):
+    icmp_pack = IP(dst=ip)/ICMP()
+    resp_packet = sr1(icmp_pack,timeout=10)
+    return resp_packet != None
 
-_________________________________________________________________________________________________
-                                         PROGRAM LAUNCH
-_________________________________________________________________________________________________
-sudo python3 SYN-scanner.py <IP> <PORT>
-sudo python3 SYN-scanner.py 192.168.1.101 8000
+def syn_scan(ip, port):
+    syn_packet = IP(dst = ip) / TCP(dport = int(port), flags = 'S') # create SYN-packet
+    response_pack = sr1(syn_packet) # send the package and get the results
 
-_________________________________________________________________________________________________
-                                        LEGAL STATEMENT
-_________________________________________________________________________________________________
-By downloading, modifying, redistributing, and/or executing SYN-scanner, the
-user agrees to the contained LEGAL.txt statement found in this repository.
+    if response_pack == None: # if it is empty
+        print(f'No response from {ip} : {port}')
+        return None
+    
+    if response_pack.getlayer(TCP).flags == 0x12: # check for the presence of SYN and ACK packets
+        print(f'Port {ip} : {port} is open')
+        return response_pack
+    else:
+        print('No SYN and ACK pakets')
+        return None
 
-I, ghostface-cybersecurity, the creator, take no legal responsibility for unlawful actions
-caused/stemming from this program. 
-
-Use responsibly and ethically!
+if __name__ == '__main__':
+    ip = sys.argv[1]
+    port = sys.argv[2]
+    if icmp_probe(ip):
+        syn_ack_pack = syn_scan(ip, port)
+        if syn_ack_pack == None:
+            print('No SYN and ACK packets')
+        else:
+            syn_ack_pack.show()
+    else:
+        print('ICMP probe failed\nResult: None\n')
